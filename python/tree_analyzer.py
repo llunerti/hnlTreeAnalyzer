@@ -33,8 +33,6 @@ parser.add_argument("--applyMuHnlPtCorr"    , action='store_true', default=False
 parser.add_argument("--applyMuDsIPSCorr"    , action='store_true', default=False, help="Apply reweighting to mu from Ds to correct data/MC IPS discrepancies")
 parser.add_argument("--applyMuHnlIPSCorr"   , action='store_true', default=False, help="Apply reweighting to mu from Hnl to correct data/MC IPS discrepancies")
 parser.add_argument("--bestCandChecks"      , action='store_true', default=False, help="Make checks for best candidate selection")
-parser.add_argument("--varyMuIDSf"          , type=float         , default=0.0  , help="Muon ID sf w/ variations: sf = sf+variation*error")
-parser.add_argument("--varyMuRecoSf"        , type=float         , default=0.0  , help="Muon reco sf w/ variations: sf = sf+variation*error")
 parser.add_argument("--keep"                , nargs="*"          , default=[]   , help="Select which branches to keep in the final output tree")
 args = parser.parse_args()
 
@@ -250,19 +248,34 @@ if dataset_category != "data" and not args.skipTrigSF:
 
 # define mu id factors for MC only
 if dataset_category != "data" and not args.skipMuIDsf:
-    variation = args.varyMuIDSf
-    mu1_id_sf = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,{variation})".format(mu1l=config["mu1_label"],variation=variation)
-    mu2_id_sf = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,{variation})".format(mu2l=config["mu2_label"],variation=variation)
+    mu1_id_sf = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta)".format(mu1l=config["mu1_label"])
+    mu2_id_sf = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta)".format(mu2l=config["mu2_label"])
+    mu1_id_sf_up = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,1.)".format(mu1l=config["mu1_label"])
+    mu2_id_sf_up = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,1.)".format(mu2l=config["mu2_label"])
+    mu1_id_sf_down = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,-1.)".format(mu1l=config["mu1_label"])
+    mu2_id_sf_down = "vget_mu_id_sf(mu_id_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,-1.)".format(mu2l=config["mu2_label"])
     df = df.Define("C_{mu1l}_id_sf".format(mu1l=config["mu1_label"]),mu1_id_sf)
     df = df.Define("C_{mu2l}_id_sf".format(mu2l=config["mu2_label"]),mu2_id_sf)
+    df = df.Define("C_{mu1l}_id_sf_up".format(mu1l=config["mu1_label"]),mu1_id_sf_up)
+    df = df.Define("C_{mu2l}_id_sf_up".format(mu2l=config["mu2_label"]),mu2_id_sf_up)
+    df = df.Define("C_{mu1l}_id_sf_down".format(mu1l=config["mu1_label"]),mu1_id_sf_down)
+    df = df.Define("C_{mu2l}_id_sf_down".format(mu2l=config["mu2_label"]),mu2_id_sf_down)
 
 # define mu id factors for MC only
 if dataset_category != "data" and not args.skipMuRecosf:
-    variation = args.varyMuRecoSf
-    mu1_reco_sf = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,{variation})".format(mu1l=config["mu1_label"],variation=variation)
-    mu2_reco_sf = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,{variation})".format(mu2l=config["mu2_label"],variation=variation)
-    df = df.Define("C_{mu1l}_reco_sf".format(mu1l=config["mu1_label"]),mu1_reco_sf) 
-    df = df.Define("C_{mu2l}_reco_sf".format(mu2l=config["mu2_label"]),mu2_reco_sf) 
+    mu1_reco_sf      = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta)".format(mu1l=config["mu1_label"])
+    mu2_reco_sf      = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta)".format(mu2l=config["mu2_label"])
+    mu1_reco_sf_up   = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,1.)".format(mu1l=config["mu1_label"])
+    mu2_reco_sf_up   = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,1.)".format(mu2l=config["mu2_label"])
+    mu1_reco_sf_down = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu1l}_pt,C_{mu1l}_eta,-1.)".format(mu1l=config["mu1_label"])
+    mu2_reco_sf_down = "vget_mu_reco_sf(mu_reco_sf_cfg,C_{mu2l}_pt,C_{mu2l}_eta,-1.)".format(mu2l=config["mu2_label"])
+    df = df.Define("C_{mu1l}_reco_sf".format(mu1l=config["mu1_label"]),mu1_reco_sf)
+    df = df.Define("C_{mu2l}_reco_sf".format(mu2l=config["mu2_label"]),mu2_reco_sf)
+    df = df.Define("C_{mu1l}_reco_sf_up".format(mu1l=config["mu1_label"]),mu1_reco_sf_up)
+    df = df.Define("C_{mu2l}_reco_sf_up".format(mu2l=config["mu2_label"]),mu2_reco_sf_up)
+    df = df.Define("C_{mu1l}_reco_sf_down".format(mu1l=config["mu1_label"]),mu1_reco_sf_down)
+    df = df.Define("C_{mu2l}_reco_sf_down".format(mu2l=config["mu2_label"]),mu2_reco_sf_down)
+
 
 # define mu_Ds pt shape scale factors for MC only
 if dataset_category != "data" and args.applyMuDsPtCorr:
@@ -443,8 +456,9 @@ for c in df.GetColumnNames():
 if dataset_category == "signal":
     df = df.Filter("C_pass_gen_matching","best-candidate-selected events have at least a GEN-matched candidate")
 
-#define categories
-df = df.Define("C_cat","get_lxy_categories(C_Hnl_vertex_2DDist_BS,C_mu_Hnl_charge,C_mu_Ds_charge)")
+##define categories
+#df = df.Define("C_cat","get_lxy_categories(C_Hnl_vertex_2DDist_BS,C_mu_Hnl_charge,C_mu_Ds_charge)")
+df = df.Define("C_cat",selection["categorization"])
 
 # redefine here the total weight as the product of all weights previously defined
 
@@ -455,26 +469,14 @@ if dataset_category != "data" and not args.skipTrigSF:
 # Include ID scale factors
 if dataset_category != "data" and not args.skipMuIDsf:
     df = df.Redefine("tot_weight","tot_weight*C_{mu1l}_id_sf*C_{mu2l}_id_sf".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
+    df = df.Define("C_mu_id_sf_up","C_{mu1l}_id_sf_up*C_{mu2l}_id_sf_up".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
+    df = df.Define("C_mu_id_sf_down","C_{mu1l}_id_sf_down*C_{mu2l}_id_sf_down".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
 
 # Include RECO scale factors
 if dataset_category != "data" and not args.skipMuRecosf:
     df = df.Redefine("tot_weight","tot_weight*C_{mu1l}_reco_sf*C_{mu2l}_reco_sf".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
-
-# Include mu_Ds pt shape scale factors
-if dataset_category != "data" and args.applyMuDsPtCorr:
-    df = df.Redefine("tot_weight","tot_weight*C_ds_pt_shape_sf")
-
-# Include mu_Hnl pt shape scale factors
-if dataset_category != "data" and args.applyMuHnlPtCorr:
-    df = df.Redefine("tot_weight","tot_weight*C_hnl_pt_shape_sf")
-
-# Include mu_Ds IPS shape scale factors
-if dataset_category != "data" and args.applyMuDsIPSCorr:
-    df = df.Redefine("tot_weight","tot_weight*C_ds_ips_shape_sf")
- 
-# Include mu_Hnl IPS shape scale factors
-if dataset_category != "data" and args.applyMuHnlIPSCorr:
-    df = df.Redefine("tot_weight","tot_weight*C_hnl_ips_shape_sf")
+    df = df.Define("C_mu_reco_sf_up","C_{mu1l}_reco_sf_up*C_{mu2l}_reco_sf_up".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
+    df = df.Define("C_mu_reco_sf_down","C_{mu1l}_reco_sf_down*C_{mu2l}_reco_sf_down".format(mu1l=config["mu1_label"],mu2l=config["mu2_label"]))
 
 #################
 ##### SAVE ######

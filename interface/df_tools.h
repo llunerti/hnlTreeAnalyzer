@@ -499,6 +499,33 @@ std::string get_lxy_categories(float hnl_lxy, int mu_hnl_charge, int mu_ds_charg
   return cat;
 }
 
+std::string get_lxys_categories(float hnl_lxys, int mu_hnl_charge, int mu_ds_charge)
+{
+  std::string cat;
+  float lxys = hnl_lxys;
+  float q1  = mu_hnl_charge;
+  float q2  = mu_ds_charge;
+
+  if (q1*q2>0){
+    if(lxys<50) cat = "SSlxys0to50";
+    else if(lxys>50 && lxys<150) cat = "SSlxys50to150";
+    else if(lxys>150) cat = "SSlxys150toInf";
+  }
+  else if (q1*q2<0){
+      if(lxys<50) cat = "OSlxys0to50";
+      else if(lxys>50 && lxys<150) cat = "OSlxys50to150";
+      else if(lxys>150) cat = "OSlxys150toInf";
+
+  }
+
+  return cat;
+}
+
+std::string get_inclusive_categories()
+{
+  return "inclusive";
+}
+
 //for debugging
 RVec<short> get_multiple_permutations(RVec<unsigned> mu1_idx, RVec<unsigned> mu2_idx, RVec<unsigned> pi_idx)
 {

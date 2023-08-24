@@ -85,11 +85,12 @@ def get_yield_from_csv(fileName):
     val = t.GetEntries()
     return val
 
-def get_weighted_yield_from_csv(fileName,varName):
+def get_weighted_yield_from_csv(fileName,varName,extra_weight=""):
     print("filename: {}".format(fileName))
     df = pd.read_csv(fileName)
-    #print("----> {}".format(list(df.columns)))
     df[varName]=df[varName]/df["mc_weight"]
+    if extra_weight != "":
+        df[varName]=df[varName]*df[extra_weight]
     weighted_yield = df[varName].sum()
     return weighted_yield
 
@@ -98,13 +99,12 @@ def get_ctauweighted_yield_from_csv(fileName,ctauVarName, varName):
     df = pd.read_csv(fileName)
     df[varName]=df[varName]/df["mc_weight"]
     df[varName] = df[varName]*df[ctauVarName]
-    #print("----> {}".format(list(df.columns)))
     weighted_yield = df[varName].sum()
     return weighted_yield
 
 def is_good_cand_var(varname):
     good = False
-    if varname.find("C_")==0 and varname!="C_mu_Hnl_BS_ips" and varname!="C_mu_Hnl_BS_ip" and varname!="C_mu_Ds_BS_ips" and varname!="C_mu_Ds_BS_ip" and varname!="C_mu_Hnl_PV_ips" and varname!="C_mu_Hnl_PV_ip" and varname!="C_mu_Ds_PV_ips" and varname!="C_mu_Ds_PV_ip":
+    if varname.find("C_")==0 and varname!="C_mu_Hnl_BS_ips" and varname!="C_mu_Hnl_BS_ip" and varname!="C_mu_Ds_BS_ips" and varname!="C_mu_Ds_BS_ip" and varname!="C_mu_Hnl_PV_ips" and varname!="C_mu_Hnl_PV_ip" and varname!="C_mu_Ds_PV_ips" and varname!="C_mu_Ds_PV_ip" and varname!="C_mu2_Phi_BS_ips" and varname!="C_mu2_Phi_BS_ip" and varname!="C_mu1_Phi_BS_ips" and varname!="C_mu1_Phi_BS_ip" and varname!="C_mu2_Phi_PV_ips" and varname!="C_mu2_Phi_PV_ip" and varname!="C_mu1_Phi_PV_ips" and varname!="C_mu1_Phi_PV_ip" and varname!="C_pi_fitted_px" and varname!="C_pi_fitted_py" and varname!="C_pi_fitted_pz" and varname!="C_pi_fitted_E" and varname!="C_mu1_Phi_fitted_px" and varname!="C_mu1_Phi_fitted_py" and varname!="C_mu1_Phi_fitted_pz" and varname!="C_mu1_Phi_fitted_E" and varname!="C_mu2_Phi_fitted_px" and varname!="C_mu2_Phi_fitted_py" and varname!="C_mu2_Phi_fitted_pz" and varname!="C_mu2_Phi_fitted_E":
         good = True
     return good
 
