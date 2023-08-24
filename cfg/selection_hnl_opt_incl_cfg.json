@@ -1,4 +1,5 @@
 {
+    "categorization" : "get_lxy_categories(C_Hnl_vertex_2DDist_BS,C_mu_Hnl_charge,C_mu_Ds_charge)",
     "gen_matching_cuts": [
         {
             "cut": "C_mu_Hnl_isHnlDaughter>0",
@@ -427,11 +428,11 @@
         "definition": "get_maxRatio_wPosCond_cand_idx(C_Hnl_vertex_3DDist_PV,C_Ds_vertex_3DDist_PV,C_Hnl_vertex_cos2D)",
         "name": "best_cand_idx"
     },
-    "__best_cand_var": {
-        "definition": "get_maxProd_cand_idx(C_Hnl_vertex_prob,C_Ds_vertex_prob)",
+    "best_cand_var": {
+        "definition": "get_maxProd_cand_idx(C_Hnl_vertex_cos2D,C_Ds_vertex_cos2D)",
         "name": "best_cand_idx"
     },
-    "best_cand_var": {
+    "__best_cand_var": {
         "definition": "get_DsCompatible_cand_idx(C_Ds_mass)",
         "name": "best_cand_idx"
     },
