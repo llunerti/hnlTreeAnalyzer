@@ -19,6 +19,7 @@ parser.add_argument("cfg_filename"          ,                                   
 parser.add_argument("dataset_short_name"    ,                                     help="Short name of the input sample to process")
 parser.add_argument("--saveOutputTree"      , action='store_true', default=False, help="Save an output tree (after all the cuts)")
 parser.add_argument("--savePreselectedTree" , action='store_true', default=False, help="Save an output tree (before the cuts and after best candidate selection)")
+parser.add_argument("--skipSelectionCuts"   , action='store_true', default=False, help="Skip optimized selection cuts (for selection optimization studies)")
 parser.add_argument("--doHistograms"        , action='store_true', default=False, help="Plot and save histograms")
 parser.add_argument("--addSPlotWeight"      , action='store_true', default=False, help="Add splot weight for data")
 parser.add_argument("--skipPUrw"            , action='store_true', default=False, help="Do not apply PU reweighting")
@@ -276,7 +277,6 @@ if dataset_category != "data" and not args.skipMuRecosf:
     df = df.Define("C_{mu1l}_reco_sf_down".format(mu1l=config["mu1_label"]),mu1_reco_sf_down)
     df = df.Define("C_{mu2l}_reco_sf_down".format(mu2l=config["mu2_label"]),mu2_reco_sf_down)
 
-
 # define mu_Ds pt shape scale factors for MC only
 if dataset_category != "data" and args.applyMuDsPtCorr:
     ds_pt_shape_sf  = "get_1D_binContent(h_ds_pt_shape_sf,C_{}_pt)".format(config["mu1_label"])
@@ -322,15 +322,18 @@ if args.bestCandChecks:
 #### PRESELECTION ####
 ######################
 
-#apply common pre-selection
+#define common pre-selection
 presel_i = 0
 presel_cuts = list()
 for sel in selection["preselection_cuts"]:
     mask_var = "pass_presel_"+str(presel_i)
     presel_cuts.append(mask_var)
     df = df.Define(mask_var,sel["cut"])
-    df = df.Filter("ROOT::VecOps::Any("+mask_var+")",sel["printout"])
     presel_i+=1
+
+#apply common pre-selection
+presel_cuts_AND = "&&".join(presel_cuts)
+df = df.Filter("ROOT::VecOps::Any("+presel_cuts_AND+")","Preselection cuts")
 
 # skim vectors to retain only candidates passing preselection
 for c in df.GetColumnNames():
@@ -338,7 +341,6 @@ for c in df.GetColumnNames():
     col_type = df.GetColumnType(col_name)
     # choose candidate branches (beginning with 'C_')
     if(hnl_tools.is_good_cand_var(col_name) and (not col_type.find("ROOT::VecOps")<0)): 
-        presel_cuts_AND = "&&".join(presel_cuts)  
         df = df.Redefine(col_name,col_name+"["+presel_cuts_AND+"]")
         continue
 
@@ -383,58 +385,58 @@ if args.savePreselectedTree:
 #### SELECTION ####
 ###################
 
-#apply optimized selection for each category
-sel_cuts = dict()
-for cat in selection["categories"]:
-    l = list()
-    sel_i = 0
-    for cut in cat["selection_cuts"]:
-        mask_var = "pass_sel_"+cat["label"]+"_"+str(sel_i)
-        l.append(mask_var)
-        df = df.Define(mask_var,cut["cut"]+' && '+cat["cut"])
-        sel_i+=1
-    sel_cuts[cat["label"]] = l
-
-# build AND of each category's selection cuts
-sel_cuts_AND = list()
-for cat in sel_cuts:
-    s = "&&".join(sel_cuts[cat])
-    sel_cuts_AND.append(s)
-
-# filter events which do not pass any of the categories' selection cuts
-df = df.Filter("ROOT::VecOps::Any("+"||".join(sel_cuts_AND)+")","selection cuts") 
-
-# skim vectors to retain only candidates passing selection cuts
-for c in df.GetColumnNames():
-    col_name = str(c)
-    col_type = df.GetColumnType(col_name)
-    # choose candidate branches (beginning with 'C_')
-    if hnl_tools.is_good_cand_var(col_name) and col_type.find("ROOT::VecOps")==0: 
-        df = df.Redefine(col_name,col_name+"["+"||".join(sel_cuts_AND)+"]")
-
-# count how many selected events have at least a GEN-matched candidate
-if args.bestCandChecks:
-    hmodel = ("h_mult_sel",";Candidate multiplicity;Normalized to unit",20,1.,21.)
-    df_check = df.Define("mult_sel","get_cand_multiplicity(C_Hnl_mass)")
-    df_check.Histo1D(hmodel,"mult_sel").SaveAs("h_cand_mult_sel_{}.root".format(dataset_to_process))
-    df_check = df_check.Filter("mult_sel>1","fraction of selected events with more than 1 candidate")
-    #vl = df.GetColumnNames()
-    #df_check.Snapshot("test","test.root",vl)
-    # define a index selecting best candidate in the event
-    df_check = df_check.Define(selection["best_cand_var"]["name"],selection["best_cand_var"]["definition"])
+if not args.skipSelectionCuts:
+    #apply optimized selection for each category
     
-    # redefine variables so that only best candidate is saved
-    for c in df_check.GetColumnNames():
+    sel_cuts = dict()
+    for cat in selection["categories"]:
+        l = list()
+        sel_i = 0
+        for cut in cat["selection_cuts"]:
+            mask_var = "pass_sel_"+cat["label"]+"_"+str(sel_i)
+            l.append(mask_var)
+            df = df.Define(mask_var,cut["cut"]+' && '+cat["cut"])
+            sel_i+=1
+        sel_cuts[cat["label"]] = l
+    
+    # build AND of each category's selection cuts
+    sel_cuts_AND = list()
+    for cat in sel_cuts:
+        s = "&&".join(sel_cuts[cat])
+        sel_cuts_AND.append(s)
+    
+    # filter events which do not pass any of the categories' selection cuts
+    df = df.Filter("ROOT::VecOps::Any("+"||".join(sel_cuts_AND)+")","selection cuts") 
+    
+    # skim vectors to retain only candidates passing selection cuts
+    for c in df.GetColumnNames():
         col_name = str(c)
-        col_type = df_check.GetColumnType(col_name)
+        col_type = df.GetColumnType(col_name)
         # choose candidate branches (beginning with 'C_')
-        if (not col_name.find("C_")<0) and (not col_type.find("ROOT::VecOps")<0):
-            idx = str(selection["best_cand_var"]["name"])
-            df_check = df_check.Redefine(col_name,col_name+"["+idx+"]")
-            continue
-    if dataset_category == "signal":
-        df_check = df_check.Filter("C_pass_gen_matching","best-cand-selected events have at least a GEN-matched candidate")
-    df_check.Report().Print()
+        if hnl_tools.is_good_cand_var(col_name) and col_type.find("ROOT::VecOps")==0: 
+            df = df.Redefine(col_name,col_name+"["+"||".join(sel_cuts_AND)+"]")
+    
+    # count how many selected events have at least a GEN-matched candidate
+    if args.bestCandChecks:
+        hmodel = ("h_mult_sel",";Candidate multiplicity;Normalized to unit",20,1.,21.)
+        df_check = df.Define("mult_sel","get_cand_multiplicity(C_Hnl_mass)")
+        df_check.Histo1D(hmodel,"mult_sel").SaveAs("h_cand_mult_sel_{}.root".format(dataset_to_process))
+        df_check = df_check.Filter("mult_sel>1","fraction of selected events with more than 1 candidate")
+        # define a index selecting best candidate in the event
+        df_check = df_check.Define(selection["best_cand_var"]["name"],selection["best_cand_var"]["definition"])
+        
+        # redefine variables so that only best candidate is saved
+        for c in df_check.GetColumnNames():
+            col_name = str(c)
+            col_type = df_check.GetColumnType(col_name)
+            # choose candidate branches (beginning with 'C_')
+            if (not col_name.find("C_")<0) and (not col_type.find("ROOT::VecOps")<0):
+                idx = str(selection["best_cand_var"]["name"])
+                df_check = df_check.Redefine(col_name,col_name+"["+idx+"]")
+                continue
+        if dataset_category == "signal":
+            df_check = df_check.Filter("C_pass_gen_matching","best-cand-selected events have at least a GEN-matched candidate")
+        df_check.Report().Print()
 
 ###################
 #### BEST CAND ####
