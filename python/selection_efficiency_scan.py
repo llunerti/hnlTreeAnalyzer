@@ -80,7 +80,6 @@ print(input_file_catOrdered)
 
 for cat in selection["categories"]:
 
-
     print("*** {} category".format(cat["label"]))
 
     if cat["label"] == "inclusive":
