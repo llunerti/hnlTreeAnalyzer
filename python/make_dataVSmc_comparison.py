@@ -3,8 +3,6 @@ import sys
 import os
 import json
 import argparse
-from paramiko import SSHClient
-from scp import SCPClient
 
 #script input arguments
 parser = argparse.ArgumentParser(description="")
