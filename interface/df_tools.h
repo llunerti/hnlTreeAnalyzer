@@ -317,6 +317,20 @@ RVec<float> xdotv(float x, RVec<float> v){
   return ov;
 }
 
+RVec<float> vdotv(RVec<float> v1, RVec<float> v2){
+  if(v1.size()!=v2.size()) 
+  {
+    std::cout<<"Vectors must have the same size!"<<std::endl;
+    std::cout<<"Exiting..."<<std::endl;
+    exit(1);
+  }
+  RVec<float> ov(v1.size());
+  for(unsigned i=0; i<v1.size(); ++i){
+    ov[i] = v1[i]*v2[i];
+  }
+  return ov;
+}
+
 //this is to get candidate invariant mass with different 
 //final state particle mass ipothesis
 RVec<Double_t> get_PxPyPzE_newM_2PartInvMass(RVec<Double_t> px_1, RVec<Double_t> py_1, RVec<Double_t> pz_1, RVec<Double_t> E_1, Double_t m_1,
